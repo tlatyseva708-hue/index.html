@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тренажёр: почему деньги не задерживаются</title>
+<style>
+:root{--bg:#faf6ef;--card:#fff;--ink:#23302b;--mut:#6b756f;--acc:#2f7d5b;--acc2:#e3f1ea;--line:#e8e0d2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17201c;--card:#202b26;--ink:#eef2ee;--mut:#9aa8a0;--acc:#5cc496;--acc2:#2a3d34;--line:#33443c}}
+:root[data-theme="dark"]{--bg:#17201c;--card:#202b26;--ink:#eef2ee;--mut:#9aa8a0;--acc:#5cc496;--acc2:#2a3d34;--line:#33443c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 10px}
+h2{font-size:1.35rem;line-height:1.3;margin:0 0 16px}
+p{margin:0 0 14px}
+.mut{color:var(--mut);font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:18px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:14px;padding:14px 22px;font-weight:600;font-size:1.05rem}
+:root[data-theme="dark"] .btn{color:#10231a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#10231a}}
+.btn.ghost{background:var(--acc2);color:var(--ink)}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.opt:hover{border-color:var(--acc)}
+.opt.sel{border-color:var(--acc);background:var(--acc2)}
+.opt:disabled{cursor:default;opacity:.65}.opt.sel:disabled{opacity:1}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .4s}
+.tag{display:inline-block;background:var(--acc2);color:var(--ink);border-radius:20px;padding:3px 12px;font-size:.85rem;font-weight:600;margin-bottom:8px}
+.ins{background:var(--acc2);border-radius:14px;padding:14px 16px;margin:6px 0 16px}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0;font-size:.95rem}
+.row span:first-child{flex:0 0 150px}.row .bar{flex:1;margin:0}
+textarea{width:100%;min-height:90px;font:inherit;border:2px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);color:var(--ink);resize:vertical}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<section id="intro">
+<h1>Куда уходят деньги?</h1>
+<p>Пять коротких вопросов. Правильных ответов нет — выбирайте то, что ближе к вашей жизни прямо сейчас. В конце вы увидите, какой механизм чаще всего «съедает» ваши деньги, и один маленький шаг на завтра.</p>
+<p class="mut">Занимает около 3 минут. Ответы остаются только в вашем браузере.</p>
+<button class="btn" id="start">Начать</button>
+</section>
+
+<section id="quiz" class="hide">
+<div class="bar"><i id="prog"></i></div>
+<p class="mut" id="count"></p>
+<div class="card">
+<h2 id="q"></h2>
+<div id="opts"></div>
+<div id="ins" class="ins hide"></div>
+<button class="btn hide" id="next">Дальше</button>
+</div>
+</section>
+
+<section id="result" class="hide">
+<h1>Ваша карта утечек</h1>
+<div class="card" id="main"></div>
+<div class="card"><h2>Как распределились ответы</h2><div id="bars"></div></div>
+<div class="card">
+<h2>Мой шаг на завтра</h2>
+<p class="mut">Перепишите шаг своими словами или оставьте как есть.</p>
+<textarea id="step"></textarea>
+<p style="margin-top:14px"><button class="btn" id="copy">Скопировать мой план</button> <button class="btn ghost" id="again">Пройти заново</button></p>
+<p class="mut" id="msg"></p>
+</div>
+</section>
+</main>
+<script>
+var P={
+A:{n:"Тихие утечки",t:"Мелкие регулярные траты: доставка, подписки, «по дороге». Каждая незаметна, вместе они заметно уменьшают месяц.",i:"Это про мелочи, которые не ощущаются как трата в момент покупки.",s:"Откройте выписку за месяц, найдите три регулярных списания и отключите одно, без которого вы проживёте."},
+B:{n:"Туман без карты",t:"Деньги приходят и уходят без общей картины. Когда не видно, куда уходит, трудно что-то менять — это не про лень, а про отсутствие карты.",i:"Это про отсутствие обзора: сложно управлять тем, чего не видно.",s:"Потратьте 15 минут: выпишите доход прошлого месяца и обязательные расходы. Только два списка, без выводов."},
+C:{n:"Потолок дохода",t:"Утечка здесь не в расходах: доход годами стоит на месте, потому что цена или ставка остаются прежними, а нагрузка растёт.",i:"Это про цену вашего труда, а не про привычки.",s:"Выберите одну услугу или ставку и пересчитайте её на 10% выше — для новых клиентов или нового договора."},
+D:{n:"Деньги как забота и утешение",t:"Деньги уходят на эмоции: порадовать себя после тяжёлого дня или помочь другим сверх возможностей. За этим стоит что-то хорошее — потребность в заботе.",i:"Это про потребность, которую деньги закрывают быстрее всего.",s:"Введите паузу 24 часа для необязательных покупок и задайте месячный лимит «на помощь другим» — это тоже забота, только о себе."}
+};
+var Q=[
+{q:"Конец месяца, вы открываете банковское приложение. Что происходит первым?",o:{A:"Удивляюсь, сколько ушло на мелочи — когда успели?",B:"Не могу объяснить, куда ушла основная сумма",C:"Думаю, что доход почти такой же, как и год назад",D:"Вспоминаю траты на других людей или «на настроение»"}},
+{q:"К вам пришла неожиданная сумма: премия или разовая оплата. Что обычно дальше?",o:{A:"За пару недель растворяется на мелких покупках",B:"Лежит на общей карте — и вдруг её уже нет",C:"Это редкость, обычно доход почти одинаковый",D:"Быстро находятся те, кому нужнее, или хочется себя наградить"}},
+{q:"Как вы обычно говорите о цене своей работы или просите повышение?",o:{A:"Тема цены не про меня — вопрос скорее в тратах",B:"Цена есть, но я не знаю, покрывает ли она мои реальные расходы",C:"Называю ниже, чем хочется, или давно не пересматриваю",D:"Уступаю, если человеку сейчас тяжело"}},
+{q:"Что происходит с деньгами, когда вы устали или расстроены?",o:{A:"Небольшие покупки и доставка «на ходу» почти каждый день",B:"Не замечаю, связано ли это с чем-то",C:"Почти не трачу, а жизнь откладываю «на потом»",D:"Трачу, чтобы порадовать себя или близких"}},
+{q:"Вас спрашивают: «Сколько вы тратите в месяц?» Что вы ответите?",o:{A:"Назову сумму, но чувствую, что реальная больше",B:"Не смогу назвать даже примерно",C:"Назову, а проблема в том, что доход не растёт",D:"Назову без подарков и помощи другим — они «не считаются»"}}
+];
+var $=function(i){return document.getElementById(i)},K="finTrainer1",i=0,sc,ans;
+function save(){try{localStorage.setItem(K,JSON.stringify({sc:sc,step:$("step").value}))}catch(e){}}
+function show(id){["intro","quiz","result"].forEach(function(s){$(s).classList.toggle("hide",s!==id)});window.scrollTo(0,0)}
+function reset(){i=0;sc={A:0,B:0,C:0,D:0}}
+function ask(){
+ var d=Q[i];$("q").textContent=d.q;$("count").textContent="Вопрос "+(i+1)+" из "+Q.length;
+ $("prog").style.width=(i/Q.length*100)+"%";$("opts").innerHTML="";$("ins").classList.add("hide");$("next").classList.add("hide");
+ Object.keys(d.o).sort(function(){return Math.random()-.5}).forEach(function(k){
+  var b=document.createElement("button");b.className="opt";b.textContent=d.o[k];
+  b.onclick=function(){pick(k,b)};$("opts").appendChild(b)});
+}
+function pick(k,b){
+ sc[k]++;
+ Array.prototype.forEach.call($("opts").children,function(x){x.disabled=true});b.classList.add("sel");
+ $("ins").innerHTML='<span class="tag">'+P[k].n+'</span><br>'+P[k].i;$("ins").classList.remove("hide");
+ $("next").textContent=i<Q.length-1?"Дальше":"Показать результат";$("next").classList.remove("hide");
+}
+function finish(){
+ var keys=Object.keys(sc).sort(function(a,b){return sc[b]-sc[a]}),top=sc[keys[0]],
+ lead=keys.filter(function(k){return sc[k]===top});
+ $("main").innerHTML=lead.map(function(k){return'<span class="tag">Главный механизм</span><h2>'+P[k].n+'</h2><p>'+P[k].t+'</p>'}).join("")+
+ (lead.length>1?'<p class="mut">Сработало сразу несколько механизмов — это нормально, начните с одного.</p>':"");
+ $("bars").innerHTML=keys.map(function(k){return'<div class="row"><span>'+P[k].n+'</span><div class="bar"><i style="width:'+(sc[k]/Q.length*100)+'%"></i></div><span>'+sc[k]+'</span></div>'}).join("");
+ var st=$("step");try{var s=JSON.parse(localStorage.getItem(K)||"{}");st.value=(s.step&&s.sc&&JSON.stringify(s.sc)===JSON.stringify(sc))?s.step:P[lead[0]].s}catch(e){st.value=P[lead[0]].s}
+ save();show("result");
+}
+$("start").onclick=function(){reset();show("quiz");ask()};
+$("next").onclick=function(){i++;if(i<Q.length)ask();else{$("prog").style.width="100%";finish()}};
+$("again").onclick=function(){reset();show("quiz");ask()};
+$("step").oninput=save;
+$("copy").onclick=function(){
+ var keys=Object.keys(sc).sort(function(a,b){return sc[b]-sc[a]});
+ var t="Мой главный механизм: "+P[keys[0]].n+"\nМой шаг на завтра: "+$("step").value;
+ function ok(){$("msg").textContent="Скопировано — можно вставить куда угодно."}
+ try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}
+ function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){$("msg").textContent="Выделите текст в поле и скопируйте вручную."}document.body.removeChild(a)}
+};
+reset();
+</script>
+</body>
+</html>
